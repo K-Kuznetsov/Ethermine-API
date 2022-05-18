@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Refresh" content="60">
+    <title>Ethermine API</title>
+    <style type="text/css">
+        body{
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px;
+        }
+        th{
+            border: 1px solid black;
+            text-align: center;
+            font-weight: bold;
+            background-color: cornflowerblue;
+            color: white;
+            padding: 10px;
+        }
+        td{
+            border: 1px solid black;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<script>
+    let dashboard;
+    let payouts;
+    const tr = document.createElement('tr');
+    const th = document.createElement('th');
+    const td = document.createElement('td');
+
+    function renderDashboard(){
+        fetch(`https://api.ethermine.org/miner/8454f8ab6cb0b8b760a9c8feb24f73465b218928/dashboard`)
+            .then(function(response){
+                dashboard = response.json();
+                return dashboard;
+            })
+            .then(function(dashboard){
+                let stats = dashboard.data;
+                let RH1 = (stats.workers[0].reportedHashrate / 1000000).toFixed(2);
+                let RH2 = (stats.workers[1].reportedHashrate / 1000000).toFixed(2);
+                let CH1 = (stats.workers[0].currentHashrate / 1000000).toFixed(2);
+                let CH2 = (stats.workers[1].currentHashrate / 1000000).toFixed(2);
+                let VS1 = (stats.workers[0].validShares / (stats.workers[0].validShares + stats.workers[0].staleShares + stats.workers[0].invalidShares) * 100).toFixed(2);
+                let VS2 = (stats.workers[1].validShares / (stats.workers[1].validShares + stats.workers[1].staleShares + stats.workers[1].invalidShares) * 100).toFixed(2);
+                let unpaid = (stats.currentStatistics.unpaid / 1000000000000000000).toFixed(5);
+                document.querySelector("#RH1").innerHTML = RH1 + " MH/s";
+                document.querySelector("#RH2").innerHTML = RH2 + " MH/s";
+                document.querySelector("#CH1").innerHTML = CH1 + " MH/s";
+                document.querySelector("#CH2").innerHTML = CH2 + " MH/s";
+                document.querySelector("#VS1").innerHTML = VS1 + "%";
+                document.querySelector("#VS2").innerHTML = VS2 + "%";
+                document.querySelector("#unpaid").innerHTML = unpaid + " ETH";
+            })
+    }
+
+    function renderStats(){
+        fetch(`https://api.ethermine.org/miner/8454f8ab6cb0b8b760a9c8feb24f73465b218928/currentStats`)
+            .then(function(response){
+                stats2 = response.json();
+                return stats2;
+            })
+            .then(function(stats2, stats){
+                let AH = (stats2.data.averageHashrate / 1000000).toFixed(2);
+                let ETH24h = (stats2.data.coinsPerMin * 60 * 24).toFixed(5);
+                let USD24h = (stats2.data.usdPerMin * 60 * 24).toFixed(2);
+                document.querySelector("#AH").innerHTML = AH + " MH/s";
+                document.querySelector("#ETH24h").innerHTML = ETH24h + " ETH";
+                document.querySelector("#USD24h").innerHTML = USD24h + " USD";
+            })
+    }
+
+    function renderPayouts() {
+        fetch(`https://api.ethermine.org/miner/8454f8ab6cb0b8b760a9c8feb24f73465b218928/payouts`)
+            .then(function (response) {
+                payouts = response.json();
+                return payouts;
+            })
+            .then(function (payouts) {
+                sumPayouts=0;
+                for (let i = 0; i < payouts.data.length; i++){
+                sumPayouts += payouts.data[i].amount;
+                }
+                document.querySelector("#sumETH").innerHTML = (sumPayouts / 1000000000000000000 + 2.00681).toFixed(5) + " ETH";
+            })
+    }
+
+    function refreshData(){
+        renderDashboard();
+        renderStats();
+        renderPayouts();
+    }setInterval(refreshData(), 60000);
+
+</script>
+
+<table id="Table1">
+    <thead>
+    <tr><th>Miner</th><th>HiveOS</th><th>Windows</th></tr>
+    </thead>
+    <tbody>
+    <tr><td>Valid shares:</td><td id="VS1"></td><td id="VS2"></td></tr>
+    <tr><td>Reported Hashrate:</td><td id="RH1"></td><td id="RH2"></td></tr>
+    <tr><td>Current hashrate:</td><td id="CH1"></td><td id="CH2"></td></tr>
+    <tr><td>Average Hashrate:</td><td colspan="2" id="AH"></td></tr>
+    <tr><td>ETH/24h:</td><td colspan="2" id="ETH24h"></td></tr>
+    <tr><td>USD/24h:</td><td colspan="2" id="USD24h"></td></tr>
+    <tr><td>Unpaid ETH:</td><td colspan="2" id="unpaid"></td></tr>
+    <tr><td>Total ETH paid:</td><td colspan="2" id="sumETH"></td></tr>
+    <tr><td>Total TON paid:</td><td colspan="2" id="sumTON">165.10082 TON</td></tr>
+    <tr><td>Total ERG paid:</td><td colspan="2" id="sumERG">26.66360 ERG</td></tr>
+    <tr><td>Total RVN paid:</td><td colspan="2" id="sumRVN">12469.04203 RVN</td></tr>
+    </tbody>
+</table>
+</body>
+</html>
